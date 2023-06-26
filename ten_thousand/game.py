@@ -3,15 +3,14 @@ from flo import diff
 from random import randint
 from ten_thousand.game_logic import GameLogic
 
+
 class GameLogic:
     @staticmethod
     def roll_dice(num_dice):
-        print('inside the roll dice function. num_dice= ', num_dice)
         dice_values = []
         for _ in range(num_dice):
             value = random.randint(1, 6)
             dice_values.append(value)
-        print('dice_values: ', dice_values)
         return tuple(dice_values)
 
     @staticmethod
@@ -72,65 +71,89 @@ def start_new_round(round):
     print('Rolling 6 dice...')
 
 
-
 def play_dice(num_rounds):
     round_num = 1
     total_points = 0
     banker = Banker()
-    start_new_round(round_num)
-    dice_to_keep = []
+
+    def zilch():
+        print("****************************************")
+        print("**        Zilch!!! Round over         **")
+        print("****************************************")
 
     while round_num <= num_rounds:
-        # print(f"Starting round {round_num}")
-        # print('Rolling 6 dice...')
-        dice_to_roll = 6-len(dice_to_keep)
-        # print('dice_to_roll ', dice_to_roll)
-        roll = dice_roller(dice_to_roll)
-        # roll_str = " ".join(map(str, roll))
-        stringified_value = [str(value) for value in roll]
-        # print('stringified_value is', stringified_value)
-        formatted_roll = " ".join(stringified_value)
-        print(f"*** {formatted_roll} ***")
+        start_new_round(round_num)
+        dice_to_keep = []
 
-        print("Enter dice to keep, or (q)uit:")
-        choice = input("> ")
+        num_dice = 6
+        print(f"Rolling {num_dice} dice...")
+        roll = dice_roller(num_dice)
 
-        if choice == "q":
-            print(f"Thanks for playing. You earned {total_points} points")
-            break
-            
-        for die in choice:
-            if die.isdigit() and int(die) in roll:
-                dice_to_keep.append(int(die))
-                print('type of dice_to_keep' , dice_to_keep)
-        
-        round_points = GameLogic.calculate_score(dice_to_keep)
+        while True:
+            stringified_value = [str(value) for value in roll]
+            formatted_roll = " ".join(stringified_value)
+            print(f"*** {formatted_roll} ***")
 
-        if not dice_to_keep:
-            print("Invalid dice selection. You scored 0 points for this round.")
-        else:
+            print("Enter dice to keep, or (q)uit:")
+            choice = input("> ")
+
+            if choice == "q":
+                print(f"Thanks for playing. You earned {total_points} points")
+                return
+
+            for die in choice:
+                if die.isdigit() and int(die) in roll:
+                    dice_to_keep.append(int(die))
+
+            if not dice_to_keep:
+                print("Invalid dice selection. You scored 0 points for this round.")
+                banker.clear_shelf()
+                zilch()
+                break
+
+            num_dice = 6 - len(dice_to_keep)
+            if num_dice == 0:
+                num_dice = 6  # If all dice are kept, roll all 6 dice again
+            roll = dice_roller(num_dice)
+
+            round_score = GameLogic.calculate_score(roll)
+            round_points = GameLogic.calculate_score(dice_to_keep)
             total_points += round_points
             banker.shelf(round_points)
-            print(f"You have {banker.shelved} unbanked points and {6 - len(dice_to_keep)} dice remaining")
-           
+            print(f"You have {banker.shelved} unbanked points and {num_dice} dice remaining")
+
+            if round_score == 0:
+                print("Zilch! You scored 0 points for this round.")
+                banker.clear_shelf()
+                zilch()
+                break
+
+            if num_dice == 0:
+                deposited = banker.bank()
+                print(f"You banked {deposited} points in round {round_num}")
+                round_num += 1
+                print(f"Total score is {total_points} points")
+                break
 
             print("(r)oll again, (b)ank your points or (q)uit:")
             action = input("> ")
 
             if action == "r":
-                print(f"Rolling {6 - len(dice_to_keep)} dice...")
                 continue
             elif action == "b":
                 deposited = banker.bank()
                 print(f"You banked {deposited} points in round {round_num}")
                 round_num += 1
                 print(f"Total score is {total_points} points")
-                start_new_round(round_num)
+                break
             elif action == "q":
                 print(f"Thanks for playing. You earned {total_points} points")
-                break
+                return
             else:
                 print("Invalid input. Please enter a valid action.")
+
+        round_num += 1
+
 
 
 if __name__ == "__main__":
