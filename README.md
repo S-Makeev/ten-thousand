@@ -127,6 +127,8 @@ E.g. roll = [1,3,5,2] and user selects 1, 1, 1, 1, 1, 1
 -Should allow user to continue rolling with 6 new dice when all dice have scored in current turn.
 -Handle zilch
 -No points for round, and round is over
+-Accounts for proper banking 
+-Implemented zilch functionality if the last roll doesn't score points. 
 
 ## Links and Resources
 
